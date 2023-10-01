@@ -10,9 +10,10 @@ to display your own custom message on the LED display.  This message will
 appear anytime there are no messages from the minibadges.  It will also
 display once everytime through the cycle of minibadge messages.
 
-You will need to install the LedControl library
-(https://github.com/wayoda/LedControl). I recommend editing the library to
-support a larger set of display characters.  Here is the list I use.
+You will need to install the 
+[LedControl library](https://github.com/wayoda/LedControl). 
+I recommend editing the library to support a larger set of display characters.
+Here is the list I use.
 
 ```
 /*
