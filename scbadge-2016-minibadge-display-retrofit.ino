@@ -6,20 +6,30 @@
  * DEFINES
  *********************************************************/
 #define DISPLAY_SIZE 8 //num of characters in display
-#define BUFFER_SIZE 256
-#define ADDR_LIST_SIZE 127
+#define BUFFER_SIZE 256 //max number of characters
+#define ADDR_LIST_SIZE 127 //max number of i2c addresses
+#define MAX_EXTENDER_BOARDS 8
+
+
+//Customize the default message
+#define DEFAULT_MESSAGE "Saintcon badges"
+#define DEFAULT_MESSAGE_SIZE 15
 
 /*********************************************************
  * Globals variables
  *********************************************************/
 
-char message[BUFFER_SIZE];
-uint8_t addr_list[ADDR_LIST_SIZE];
+char message[BUFFER_SIZE]; //Store the current minibadge message
+uint8_t addr_list[ADDR_LIST_SIZE]; //Store minibadge i2c addresses
+uint8_t extenderBoards[MAX_EXTENDER_BOARDS]; //Store extender board i2c addresses
+
 int num_addresses = 0;
+int num_boards = 0;
 int cur_addr = 0;
 int message_size = 0;
 
 /*
+ This is for controlling the 7-segment LED DISPLAY
  pin D7 is connected to the DataIn
  pin D5 is connected to the CLK
  pin D8 is connected to LOAD
@@ -27,7 +37,7 @@ int message_size = 0;
  */
 LedControl lc=LedControl(D7,D5,D8,1);
 
-int intensity = 4; //Not to bright to start
+int intensity = 4; //Controls brightness of LED DISPLAY
 
 /* we always wait a bit between updates of the display */
 unsigned long delaytime=500;
@@ -63,6 +73,7 @@ void set_count_offset(){
 void scan_addresses(){
   int error = 0;
   num_addresses = 0;
+  num_boards = 0;
   for(uint8_t address = 1; address < 127; address++ )
   {
     // The i2c_scanner uses the return value of
@@ -78,7 +89,12 @@ void scan_addresses(){
         Serial.print("0");
       Serial.print(address,HEX);
       Serial.println("  !");
-      addr_list[num_addresses++] = address;
+      if(address >=32 && address < 40){
+        extenderBoards[num_boards++] = address;
+      }
+      else{
+        addr_list[num_addresses++] = address;
+      }
     }
     else if (error==4)
     {
@@ -88,17 +104,35 @@ void scan_addresses(){
       Serial.println(address,HEX);
     }    
   }
+  Serial.print(num_boards);
+  Serial.println(" extender boards found");
   Serial.print(num_addresses);
-  Serial.println(" I2C addresses found");
+  Serial.println(" I2C minibadge addresses found");
+  for(int i=0; i<num_boards; i++){
+    //Not sure what the purpose of sending theses bytes are
+    //But the boards don't work without them
+    Wire.beginTransmission(extenderBoards[i]);
+    Wire.write(0x03);
+    Wire.write(0x00);
+    Wire.endTransmission();
+
+    //These bytes control if the extender board is on or off
+    Wire.beginTransmission(extenderBoards[i]);
+    Wire.write(0x01);
+    Wire.write(0xFF); //0xFF for ON //0x00 for off
+    Wire.endTransmission();
+  }
+}
+void set_message_to_default(){
+  message_size = DEFAULT_MESSAGE_SIZE;
+  strncpy(message, DEFAULT_MESSAGE, message_size);
+  message[message_size] = '\0';
 }
 
-// This reads from the provided device if it is connected
-// getWriteState will output if the minibadge supports writing as well as make read less verbose
+// This reads from the current device(minibadge) if it is connected
 void get_message(){
   if (num_addresses == 0 || cur_addr >= num_addresses){
-    strncpy(message, "kfeuz badges", 12);
-    message[12] = '\0';
-    message_size = 12;
+    set_message_to_default();
     return;
   }
   uint8_t addr = addr_list[cur_addr];
@@ -123,8 +157,12 @@ void get_message(){
 
     if(res == 0){
       Serial.println(F("Noting to do.\n\rEnding read."));
+      set_message_to_default();
     }else if(res == 1){
       Serial.println(F("Read button press.\n\rEnding read."));
+      //I don't have a minibadge that supports button presses
+      //So I haven't not properly implemented this scenario
+      set_message_to_default();
     }else if(res == 2){
       Wire.requestFrom(addr, 1);
       res = Wire.read();
@@ -182,6 +220,7 @@ void sketch_loop(){
     digitalWrite(BUILTIN_LED, HIGH);
     digitalWrite(D3, HIGH);
   }
+  pulse = !pulse;
   display_text();
   count++;
   if(count > message_size) {
