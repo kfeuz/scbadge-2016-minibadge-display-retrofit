@@ -1,11 +1,9 @@
 # Saintcon 2016 Badge Minibadge Backport
 
-This project backports support for minibadges to the
-Saintcon 2016 Badge.  It does not integrate it into the 2016 badge code
-but instead replaces the code entirely.
-
-The 2016 badge uses a Wemos d1 miniboard and the code is written for the
-arduino platform.
+This project adds support for minibadges to the
+Saintcon 2016 Badge.  It does not integrate it into the 
+[2016 badge code](http://saintcon.gitlab.io/SaintCon2016Badge/)
+but instead replaces the code entirely with an arduino sketch.
 
 In the code you can change the DEFAULT_MESSAGE and DEFAULT_MESSAGE_SIZE
 to display your own custom message on the LED display.  This message will
