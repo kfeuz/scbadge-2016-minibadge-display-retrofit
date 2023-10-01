@@ -44,12 +44,12 @@ const static byte charTable [] PROGMEM  = {
 ## Wiring guide
 
 ExtenderHeader to Wemos D1 Mini
-- SCL to D1
-- SDA to D2
-- CLK to D3*
-- GND to GND
-- 5v to 5v
-- 3v3 t0 3v3
+ - SCL to D1
+ - SDA to D2
+ - CLK to D3*
+ - GND to GND
+ - 5v to 5v
+ - 3v3 t0 3v3
 
 *Powering the CLK pin from D3 (or any other GPIO pin) results in a
 power-restriced CLK. I.e. you will not be able to power more than a
